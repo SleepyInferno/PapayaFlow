@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PapayaFlow</title>
+  <!-- No-flash theme init: MUST be before stylesheet (per UI-SPEC Section 11, D-16) -->
+  <script>
+    (function() {
+      var t = localStorage.getItem('papayaflow-theme');
+      if (t) document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Page Header (per UI-SPEC Section 6, 7.1) -->
+  <header class="page-header">
+    <div class="container header-inner">
+      <div class="header-brand">
+        <h1>PapayaFlow</h1>
+        <p class="header-subtitle">Print cost dashboard</p>
+      </div>
+      <div class="header-actions">
+        <button id="new-report-btn" class="btn-secondary" style="display:none" aria-label="Start a new report">New Report</button>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Switch to dark mode">&#127769;</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Upload Section (per UI-SPEC Sections 7.2, 7.3) -->
+    <section id="upload-section">
+      <div class="upload-area" id="upload-area">
+        <h2 class="upload-heading">Upload Files</h2>
+        <p class="upload-subtext">Upload a PaperCut Hive activity report (PDF or CSV) and your Intune user export CSV to generate the department report.</p>
+        <form id="upload-form" novalidate>
+          <div class="file-field">
+            <label for="pdf-input" class="file-label">PaperCut Report (PDF or CSV)</label>
+            <input type="file" id="pdf-input" name="pdf" accept=".pdf,.csv" required>
+          </div>
+          <div class="file-field">
+            <label for="csv-input" class="file-label">Intune CSV</label>
+            <input type="file" id="csv-input" name="csv" accept=".csv" required>
+          </div>
+          <button type="submit" id="process-btn" class="btn-primary" disabled>Process Report</button>
+        </form>
+      </div>
+
+      <!-- Status Banner (per UI-SPEC Section 7.3) -->
+      <div id="status-banner" class="status-banner" style="display:none" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- Skeleton Loading (per UI-SPEC Section 7.4) -->
+    <section id="loading-skeleton" style="display:none" aria-label="Loading results" aria-busy="true">
+      <div class="skeleton-cards">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+      </div>
+      <div class="skeleton skeleton-row"></div>
+      <div class="skeleton skeleton-row"></div>
+      <div class="skeleton skeleton-row"></div>
+    </section>
+
+    <!-- Dashboard Section (per UI-SPEC Sections 7.5, 7.6, 7.7, 7.8) -->
+    <section id="dashboard-section" style="display:none">
+
+      <!-- Report Header (per UI-SPEC Sections 7.5, 8.7) -->
+      <div class="section-header">
+        <h2 class="section-title">Summary</h2>
+        <p id="date-range" class="date-range"></p>
+      </div>
+
+      <!-- Stat Cards (per UI-SPEC Section 7.5, D-04, D-05) -->
+      <div class="hero-stats" id="stat-cards">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-total-pages">&#8212;</div>
+          <div class="stat-caption">TOTAL PAGES</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-total-cost">&#8212;</div>
+          <div class="stat-caption">TOTAL COST</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-active-users">&#8212;</div>
+          <div class="stat-caption">ACTIVE USERS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-color-pct">&#8212;</div>
+          <div class="stat-caption">COLOR %</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-departments">&#8212;</div>
+          <div class="stat-caption">DEPARTMENTS</div>
+        </div>
+      </div>
+
+      <!-- Controls Bar (per UI-SPEC Section 7.6, D-13) -->
+      <div class="controls-bar">
+        <span class="controls-label">Flag color &gt;</span>
+        <input type="number" id="color-threshold" value="30" min="0" max="100"
+               aria-label="Color percentage threshold">
+        <span class="controls-label">%</span>
+        <button id="export-btn" class="btn-secondary" aria-label="Export data as CSV">Export CSV</button>
+      </div>
+
+      <!-- Department Table (per UI-SPEC Section 7.7, D-07, D-08, D-09, D-10, D-11) -->
+      <div class="table-scroll">
+        <table class="dept-table" id="dept-table">
+          <thead>
+            <tr>
+              <th class="chevron-col"></th>
+              <th data-col="Name" aria-sort="none">Department</th>
+              <th data-col="ActiveUsers" aria-sort="none">Users</th>
+              <th data-col="TotalPages" aria-sort="none">Pages</th>
+              <th data-col="TotalPrint" aria-sort="none">Print</th>
+              <th data-col="TotalCopy" aria-sort="none">Copy</th>
+              <th data-col="TotalBW" aria-sort="none">B&amp;W</th>
+              <th data-col="TotalColor" aria-sort="none">Color</th>
+              <th data-col="PctColor" aria-sort="none">Color %</th>
+              <th data-col="TotalOneSided" aria-sort="none">1-Sided</th>
+              <th data-col="TotalTwoSided" aria-sort="none">2-Sided</th>
+              <th data-col="TotalScans" aria-sort="none">Scans</th>
+              <th data-col="TotalFax" aria-sort="none">Fax</th>
+              <th data-col="TotalJobs" aria-sort="none">Jobs</th>
+              <th data-col="TotalCost" aria-sort="descending">Cost</th>
+            </tr>
+          </thead>
+          <tbody id="dept-tbody">
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State (per UI-SPEC Section 8.4) -->
+      <div id="empty-state" class="empty-state" style="display:none">
+        No department data found. The PDF may contain no user activity for this period.
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

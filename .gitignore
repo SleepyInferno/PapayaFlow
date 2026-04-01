@@ -1,0 +1,23 @@
+# User-uploaded input files (may contain PII — never commit)
+*.pdf
+*.csv
+results/
+
+# Runtime binaries (user-supplied, not bundled)
+bin/
+
+# Claude Code agent worktrees (local tooling state)
+.claude/
+
+# GSD planning artifacts (local development state)
+.planning/
+
+# Project design config (local only)
+.impeccable.md
+
+# Temp files
+*.tmp
+
+# Windows
+Thumbs.db
+desktop.ini
